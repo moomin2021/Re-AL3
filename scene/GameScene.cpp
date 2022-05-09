@@ -4,6 +4,21 @@
 #include "AxisIndicator.h"
 #include "PrimitiveDrawer.h"
 
+double PI = 3.141592f;
+
+float RadianChange(float n)
+{
+	return n * (PI / 180.0f);
+}
+
+void SubIdentityMatrix(Matrix4 * m)
+{
+	for (size_t i = 0; i < 4; i++)
+	{
+		m->m[i][i];
+	}
+}
+
 GameScene::GameScene() {}
 
 GameScene::~GameScene() {
@@ -41,12 +56,69 @@ void GameScene::Initialize() {
 
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&debugCamera_->GetViewProjection());
+
+	//// スケール
+
+	//// X, Y, Z方向のスケーリングを設定
+	//worldTransform_.scale_ = { 1.0f, 5.0f, 1.0f };
+
+	//// スケーリング行列を宣言
+	//Matrix4 matScale;
+
+	//// スケーリング倍率を行列に設定する
+	//matScale.m[0][0] = worldTransform_.scale_.x;
+	//matScale.m[1][1] = worldTransform_.scale_.y;
+	//matScale.m[2][2] = worldTransform_.scale_.z;
+	//matScale.m[3][3] = 1.0f;
+
+	//// 単位行列を代入
+	//SubIdentityMatrix(&worldTransform_.matWorld_);
+
+	//// 掛け算
+	//worldTransform_.matWorld_ *= matScale;
+
+	// 回転
+
+	// X, Y, Z軸周りの回転角を設定
+	worldTransform_.rotation_ = { 0.0f, 0.0f, RadianChange(45.0f)};
+
+	// Z軸回転行列を宣言
+	Matrix4 matRotZ;
+
+	// Z軸回転行列の各要素を設定する
+	matRotZ.m[0][0] = cos(worldTransform_.rotation_.z);
+	matRotZ.m[0][1] = sin(worldTransform_.rotation_.z);
+	matRotZ.m[1][0] = -sin(worldTransform_.rotation_.z);
+	matRotZ.m[1][1] = cos(worldTransform_.rotation_.z);
+	matRotZ.m[2][2] = 1.0f;
+	matRotZ.m[3][3] = 1.0f;
+
+	// 単位行列を代入
+	SubIdentityMatrix(&worldTransform_.matWorld_);
+
+	// 掛け算
+	worldTransform_.matWorld_ *= matRotZ;
+
+	// 行列の転送
+	worldTransform_.TransferMatrix();
 }
 
 void GameScene::Update() {
 
 	// デバックカメラの更新
 	debugCamera_->Update();
+
+	debugText_->SetPos(50, 50);
+	debugText_->Printf("[0]:(%f, %f, %f, %f)", worldTransform_.matWorld_.m[0][0], worldTransform_.matWorld_.m[0][1], worldTransform_.matWorld_.m[0][2], worldTransform_.matWorld_.m[0][3]);
+
+	debugText_->SetPos(50, 70);
+	debugText_->Printf("[1]:(%f, %f, %f, %f)", worldTransform_.matWorld_.m[1][0], worldTransform_.matWorld_.m[1][1], worldTransform_.matWorld_.m[1][2], worldTransform_.matWorld_.m[1][3]);
+
+	debugText_->SetPos(50, 90);
+	debugText_->Printf("[2]:(%f, %f, %f, %f)", worldTransform_.matWorld_.m[2][0], worldTransform_.matWorld_.m[2][1], worldTransform_.matWorld_.m[2][2], worldTransform_.matWorld_.m[2][3]);
+
+	debugText_->SetPos(50, 110);
+	debugText_->Printf("[3]:(%f, %f, %f, %f)", worldTransform_.matWorld_.m[3][0], worldTransform_.matWorld_.m[3][1], worldTransform_.matWorld_.m[3][2], worldTransform_.matWorld_.m[3][3]);
 }
 
 void GameScene::Draw() {
@@ -77,7 +149,7 @@ void GameScene::Draw() {
 	/// </summary>
 	
 	// 3Dモデル追加
-	//model_->Draw(worldTransform_, viewProjection_, textureHandle_);
+	model_->Draw(worldTransform_, viewProjection_, textureHandle_);
 
 	model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
 	
