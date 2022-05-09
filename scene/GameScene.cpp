@@ -82,7 +82,18 @@ void GameScene::Draw() {
 	model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
 	
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
-	PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(0.0f, 0.0f, 5.0f), Vector3(0.0f, 0.0f, -5.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+
+	// Z軸(奥行き)方向のライン描画(複数)
+	for (size_t i = 0; i < 21; i++)
+	{
+		PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(10.0f - i, 0.0f, 10.0f), Vector3(10.0f - i, 0.0f, -10.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+	}
+
+	// X軸(横)方向のライン描画(複数)
+	for (size_t i = 0; i < 21; i++)
+	{
+		PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(10.0f, 0.0f, 10.0f - i), Vector3(-10.0f, 0.0f, 10.0f - i), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	}
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
