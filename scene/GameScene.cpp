@@ -11,14 +11,6 @@ float RadianChange(float n)
 	return n * (PI / 180.0f);
 }
 
-void SubIdentityMatrix(Matrix4 * m)
-{
-	for (size_t i = 0; i < 4; i++)
-	{
-		m->m[i][i];
-	}
-}
-
 GameScene::GameScene() {}
 
 GameScene::~GameScene() {
