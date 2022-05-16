@@ -121,7 +121,7 @@ void GameScene::Initialize() {
 	matTrans.m[3][2] = worldTransform_.translation_.z;
 
 	// 単位行列を代入
-	SubIdentityMatrix(&worldTransform_.matWorld_);
+	worldTransform_.matWorld_ = MathUtility::Matrix4Identity();
 
 	// 掛け算
 	worldTransform_.matWorld_ *= matScale;
