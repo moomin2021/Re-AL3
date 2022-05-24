@@ -54,18 +54,6 @@ class GameScene {
 	/// 
 	
 public:
-	enum PartId
-	{
-		kRoot,// --> 大元
-		kSpine,// -> 脊椎
-		kChest,// -> 胸
-		kHead,// --> 頭
-		kArmL,// --> 左腕
-		kArmR,// --> 右腕
-		kHip,// ---> 尻
-		kLegL,// --> 左足
-		kLegR// ---> 右足
-	};
 	
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
@@ -77,7 +65,7 @@ public:
 	Model * model_ = nullptr;
 
 	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[100];
+	WorldTransform worldTransforms_[9][9];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
