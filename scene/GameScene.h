@@ -5,7 +5,6 @@
 #include "DebugText.h"
 #include "Input.h"
 #include "Model.h"
-#include "Matrix.h"
 #include "SafeDelete.h"
 #include "Sprite.h"
 #include "ViewProjection.h"
@@ -48,7 +47,6 @@ class GameScene {
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
 	DebugText* debugText_ = nullptr;
-	Matrix * matrix = nullptr;
 
 	/// <summary>
 	/// ゲームシーン用

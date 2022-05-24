@@ -5,30 +5,6 @@
 #include "PrimitiveDrawer.h"
 #include <random>
 
-float PI = 3.141592f;
-
-float RadianChange(float n)
-{
-	return n * (PI / 180.0f);
-}
-
-float AngleChange(float n)
-{
-	return 180.0f / PI * n;
-}
-
-float Minimum(float n, float max)
-{
-	if (n > max) return max;
-	return n;
-}
-
-float Maximum(float n, float min)
-{
-	if (n < min) return min;
-	return n;
-}
-
 GameScene::GameScene() {}
 
 GameScene::~GameScene()
@@ -44,7 +20,6 @@ void GameScene::Initialize()
 	input_ = Input::GetInstance();
 	audio_ = Audio::GetInstance();
 	debugText_ = DebugText::GetInstance();
-	matrix = new Matrix;
 
 	// 乱数シード生成器
 	std::random_device seed_gen;
@@ -55,7 +30,7 @@ void GameScene::Initialize()
 	// 乱数範囲の指定
 	std::uniform_real_distribution<float> dist(-10, 10);
 
-	std::uniform_real_distribution<float> rotDist(0.0f, PI * 2.0f);
+	std::uniform_real_distribution<float> rotDist(0.0f, MathUtility::PI * 2.0f);
 
 	// ファイル名を指定してテクスチャを読み込む
 	textureHandle_ = TextureManager::Load("mario.jpg");
@@ -94,6 +69,7 @@ void GameScene::Initialize()
 	//}
 
 	// キャラクターの大元を初期化
+	//worldTransforms_[PartId::kRoot].rotation_ = { RadianChange(45.0f), RadianChange(45.0f) , RadianChange(45.0f) };
 	worldTransforms_[PartId::kRoot].Initialize();
 
 	// 脊椎の初期化と設定
@@ -168,7 +144,6 @@ void GameScene::Update()
 		}
 
 		worldTransforms_[PartId::kRoot].translation_ += move;
-		matrix->UpdateMatrix(worldTransforms_[PartId::kRoot]);
 
 	}
 
@@ -198,12 +173,10 @@ void GameScene::Update()
 		}
 	}
 
-	// 子の計算
-	for (size_t i = 1;i <= PartId::kLegR;i++)
+	// 行列の計算
+	for (size_t i = 0; i <= PartId::kLegR; i++)
 	{
-		matrix->UpdateMatrix(worldTransforms_[i]);
-		worldTransforms_[i].matWorld_ *= worldTransforms_[i].parent_->matWorld_;
-		worldTransforms_[i].TransferMatrix();
+		worldTransforms_[i].UpdateMatrix();
 	}
 
 	// 行列の再計算
@@ -211,8 +184,16 @@ void GameScene::Update()
 
 	// デバッグ用表示
 	debugText_->SetPos(50, 50);
-	debugText_->Printf("translation:(%f, %f, %f)", worldTransforms_[0].matWorld_.m[3][0], worldTransforms_[0].matWorld_.m[3][1], worldTransforms_[0].matWorld_.m[3][2]);
+	debugText_->Printf("translation:(%f, %f, %f)", worldTransforms_[0].translation_.x, worldTransforms_[0].translation_.y, worldTransforms_[0].translation_.z);
 
+	debugText_->SetPos(50, 70);
+	debugText_->Printf("rota:(%f, %f, %f)", worldTransforms_[0].rotation_.x, worldTransforms_[0].rotation_.y, worldTransforms_[0].rotation_.z);
+
+	debugText_->SetPos(50, 90);
+	debugText_->Printf("scale:(%f, %f, %f)", worldTransforms_[0].scale_.x, worldTransforms_[0].scale_.y, worldTransforms_[0].scale_.z);
+
+	debugText_->SetPos(50, 110);
+	debugText_->Printf("scale:(%f, %f, %f)", worldTransforms_[0].matWorld_.m[0][0], worldTransforms_[0].matWorld_.m[1][1], worldTransforms_[0].matWorld_.m[2][2]);
 }
 
 void GameScene::Draw()

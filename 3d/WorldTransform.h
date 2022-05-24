@@ -26,6 +26,8 @@ struct WorldTransform {
 	Vector3 translation_ = {0, 0, 0};
 	// ローカル → ワールド変換行列
 	Matrix4 matWorld_;
+	// 各要素の行列の計算結果
+	Matrix4 matScale, matRot, matTrans;
 	// 親となるワールド変換へのポインタ
 	WorldTransform* parent_ = nullptr;
 
@@ -45,4 +47,20 @@ struct WorldTransform {
 	/// 行列を転送する
 	/// </summary>
 	void TransferMatrix();
+	/// <summary>
+	/// 拡縮の行列計算
+	/// </summary>
+	void SetScale();
+	/// <summary>
+	/// 回転移動の行列計算
+	/// </summary>
+	void SetRot();
+	/// <summary>
+	/// 平行移動の行列計算
+	/// </summary>
+	void SetTrans();
+	/// <summary>
+	/// 行列を合成して計算する
+	/// </summary>
+	void UpdateMatrix();
 };
