@@ -10,7 +10,8 @@ GameScene::GameScene() {}
 GameScene::~GameScene()
 {
 	delete model_;
-	delete sprite_;
+	delete sprite_[0];
+	delete sprite_[1];
 	delete debugCamera_;
 }
 
@@ -36,12 +37,14 @@ void GameScene::Initialize()
 	// ファイル名を指定してテクスチャを読み込む
 	textureHandle_[0] = TextureManager::Load("mario.jpg");
 	textureHandle_[1] = TextureManager::Load("reticle.png");
+	textureHandle_[2] = TextureManager::Load("scope.png");
 
 	// 3Dモデルの生成
 	model_ = Model::Create();
 
 	// スプライト生成
-	sprite_ = Sprite::Create(textureHandle_[1], {WinApp::kWindowWidth / 2.0f - 64, WinApp::kWindowHeight / 2.0f - 64 });
+	sprite_[0] = Sprite::Create(textureHandle_[1], { WinApp::kWindowWidth / 2.0f - 64, WinApp::kWindowHeight / 2.0f - 64 });
+	sprite_[1] = Sprite::Create(textureHandle_[2], { 0, 0 });
 
 	// デバックカメラの生成
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
@@ -75,7 +78,7 @@ void GameScene::Initialize()
 	}
 
 	// 垂直方向視野角を設定
-	viewProjection_.fovAngleY = MathUtility::Degree2Radian(40.0f);
+	viewProjection_.fovAngleY = MathUtility::Degree2Radian(90.0f);
 
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
@@ -117,40 +120,57 @@ void GameScene::Update()
 
 	// スコープモード
 	{
-		// 視野角を変える速度
-		float fovSpeed = 2.0f;
-
-		// スペースキーが押されている場合
-		if (input_->PushKey(DIK_SPACE))
+		// スペースを押した場合
+		if (input_->TriggerKey(DIK_SPACE))
 		{
-			// スコープモードを真に
-			isScopeMode = true;
+			// スコープモードが真だったらスコープモードを偽にする
+			if (isScopeMode) isScopeMode = false, fovAngle = 90.0f, viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
 
-			// 垂直方向視野角を減少させる
-			fovAngle -= fovSpeed;
-
-			// 一定の値からは値が減らないようにする
-			fovAngle = MathUtility::Clamp(fovAngle, 40.0f, 20.0f);
-
-			// 垂直方向視野角の値を設定する
-			viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
-
+			// スコープモードが偽だったらスコープモードを真にする
+			else isScopeMode = true, fovAngle = 30.0f, viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
 		}
 
-		// スペースキーが押されていない場合
-		else
+		// 視野角が変わるスピード
+		float fovSpeed = 2.0f;
+
+		// スコープモードが真だった場合
+		if (isScopeMode)
 		{
-			// スコープモードを偽に
-			isScopeMode = false;
+			// Wキーが押されたら
+			if (input_->PushKey(DIK_W))
+			{
+				scopeMagnification = 8;
+			}
 
-			// 垂直方向視野角を増加させる
-			fovAngle += fovSpeed;
+			// Sキーが押されたら
+			else if (input_->PushKey(DIK_S))
+			{
+				scopeMagnification = 4;
+			}
 
-			// 一定の値からは値が増えないようにする
-			fovAngle = MathUtility::Clamp(fovAngle, 40.0f, 20.0f);
+			if (scopeMagnification == 4)
+			{
+				// 垂直方向視野角を増加させる
+				fovAngle += fovSpeed;
 
-			// 垂直方向視野角の値を設定する
-			viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
+				// 一定の値からは値が減らないようにする
+				fovAngle = MathUtility::Clamp(fovAngle, 30.0f, 15.0f);
+
+				// 垂直方向視野角の値を設定する
+				viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
+			}
+
+			if (scopeMagnification == 8)
+			{
+				// 垂直方向視野角を増加させる
+				fovAngle -= fovSpeed;
+
+				// 一定の値からは値が減らないようにする
+				fovAngle = MathUtility::Clamp(fovAngle, 30.0f, 15.0f);
+
+				// 垂直方向視野角の値を設定する
+				viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
+			}
 		}
 	}
 
@@ -234,9 +254,9 @@ void GameScene::Draw()
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
-	
+
 	// スプライト描画
-	if (isScopeMode) sprite_->Draw();
+	if (isScopeMode) sprite_[0]->Draw(), sprite_[1]->Draw();
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);

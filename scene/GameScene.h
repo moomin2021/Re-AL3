@@ -59,17 +59,19 @@ public:
 	float viewAngle = 0.0f;
 	
 	// テクスチャハンドル
-	uint32_t textureHandle_[2]{};
+	uint32_t textureHandle_[3]{};
 
 	// スプライト
-	Sprite * sprite_ = nullptr;
+	Sprite * sprite_[2]{};
 
 	// 3Dモデル
 	Model * model_ = nullptr;
 
 	bool isScopeMode = false;
 
-	float fovAngle = 40.0f;
+	float fovAngle = 90.0f;
+
+	int scopeMagnification = 4.0f;
 
 	// ワールドトランスフォーム
 	WorldTransform worldTransforms_[100];
