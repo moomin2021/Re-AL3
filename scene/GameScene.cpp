@@ -10,6 +10,7 @@ GameScene::GameScene() {}
 GameScene::~GameScene()
 {
 	delete model_;
+	delete sprite_;
 	delete debugCamera_;
 }
 
@@ -33,10 +34,14 @@ void GameScene::Initialize()
 	std::uniform_real_distribution<float> rotDist(0.0f, MathUtility::PI * 2.0f);
 
 	// ファイル名を指定してテクスチャを読み込む
-	textureHandle_ = TextureManager::Load("mario.jpg");
+	textureHandle_[0] = TextureManager::Load("mario.jpg");
+	textureHandle_[1] = TextureManager::Load("reticle.png");
 
 	// 3Dモデルの生成
 	model_ = Model::Create();
+
+	// スプライト生成
+	sprite_ = Sprite::Create(textureHandle_[1], {WinApp::kWindowWidth / 2.0f - 64, WinApp::kWindowHeight / 2.0f - 64 });
 
 	// デバックカメラの生成
 	debugCamera_ = new DebugCamera(WinApp::kWindowWidth, WinApp::kWindowHeight);
@@ -59,15 +64,18 @@ void GameScene::Initialize()
 	// オブジェクト初期化
 	for (size_t i = 0; i < _countof(worldTransforms_); i++)
 	{
-		for (size_t j = 0; j < _countof(worldTransforms_); j++)
-		{
-			// オブジェクトの位置を指定
-			worldTransforms_[i][j].translation_ = { (float)i * objectSpace - radius, (float)j * objectSpace - radius, 0 };
+		// オブジェクトの位置を指定
+		worldTransforms_[i].translation_ = { dist(engine), dist(engine), dist(engine) };
 
-			// オブジェクト初期化
-			worldTransforms_[i][j].Initialize();
-		}
+		// オブジェクトの回転を指定
+		worldTransforms_[i].rotation_ = { rotDist(engine), rotDist(engine), rotDist(engine) };
+
+		// オブジェクト初期化
+		worldTransforms_[i].Initialize();
 	}
+
+	// 垂直方向視野角を設定
+	viewProjection_.fovAngleY = MathUtility::Degree2Radian(40.0f);
 
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
@@ -81,45 +89,42 @@ void GameScene::Update()
 
 	for (size_t i = 0; i < _countof(worldTransforms_); i++)
 	{
-		for (size_t j = 0; j < _countof(worldTransforms_); j++)
-		{
-			// 行列の再計算
-			worldTransforms_[i][j].UpdateMatrix();
-		}
+		// 行列の再計算
+		worldTransforms_[i].UpdateMatrix();
 	}
 
 	// 注視点の移動
 	{
 		// 視点の移動ベクトル
-		Vector3 move = {0, 0, 0};
+		Vector3 move = { 0, 0, 0 };
 
 		// 視点の移動速度
 		const float targetSpeed = 0.2f;
 
 		// 視点の横移動計算
-		move.x = ((input_->PushKey(DIK_D)) - (input_->PushKey(DIK_A))) * targetSpeed;
+		move.x = ((input_->PushKey(DIK_RIGHT)) - (input_->PushKey(DIK_LEFT))) * targetSpeed;
 
 		// 視点の縦移動計算
-		move.y = ((input_->PushKey(DIK_W)) - (input_->PushKey(DIK_S))) * targetSpeed;
+		move.y = ((input_->PushKey(DIK_UP)) - (input_->PushKey(DIK_DOWN))) * targetSpeed;
 
 		// ベクトルの加算
 		viewProjection_.target += move;
 
 		// 視点を制限
-		viewProjection_.target.x = MathUtility::Clamp(viewProjection_.target.x, 20.0f, -20.0f);
-		viewProjection_.target.y = MathUtility::Clamp(viewProjection_.target.y, 20.0f, -20.0f);
+		viewProjection_.target.x = MathUtility::Clamp(viewProjection_.target.x, 10.0f, -10.0f);
+		viewProjection_.target.y = MathUtility::Clamp(viewProjection_.target.y, 10.0f, -10.0f);
 	}
 
-	// ズームイン・ズームアウト
+	// スコープモード
 	{
-		// ズーム速度
-		const float zoomSpeed = 0.05f;
+		if (input_->TriggerKey(DIK_SPACE))
+		{
+			// スコープモードが真だった場合スコープモードを偽に
+			if (isScopeMode) isScopeMode = false, viewProjection_.fovAngleY = MathUtility::Degree2Radian(40.0f);
 
-		// 計算した後加算
-		viewProjection_.fovAngleY += ((input_->PushKey(DIK_DOWN)) - (input_->PushKey(DIK_UP))) * zoomSpeed;
-
-		// ズーム制限
-		viewProjection_.fovAngleY = MathUtility::Clamp(viewProjection_.fovAngleY, 3.0f, 0.01f);
+			// スコープモードが偽だった場合スコープモードを真に
+			else isScopeMode = true, viewProjection_.fovAngleY = MathUtility::Degree2Radian(20.0f);
+		}
 	}
 
 	// 行列の再計算
@@ -174,25 +179,22 @@ void GameScene::Draw()
 
 	for (size_t i = 0; i < _countof(worldTransforms_); i++)
 	{
-		for (size_t j = 0; j < _countof(worldTransforms_); j++)
-		{
-			model_->Draw(worldTransforms_[i][j], viewProjection_, textureHandle_);
-		}
+		model_->Draw(worldTransforms_[i], viewProjection_, textureHandle_[0]);
 	}
 
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
 
-	// Z軸(奥行き)方向のライン描画(複数)
-	for (size_t i = 0; i < 21; i++)
-	{
-		PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(10.0f - i, 0.0f, 10.0f), Vector3(10.0f - i, 0.0f, -10.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
-	}
+	//// Z軸(奥行き)方向のライン描画(複数)
+	//for (size_t i = 0; i < 21; i++)
+	//{
+	//	PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(10.0f - i, 0.0f, 10.0f), Vector3(10.0f - i, 0.0f, -10.0f), Vector4(0.0f, 0.0f, 1.0f, 1.0f));
+	//}
 
-	// X軸(横)方向のライン描画(複数)
-	for (size_t i = 0; i < 21; i++)
-	{
-		PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(10.0f, 0.0f, 10.0f - i), Vector3(-10.0f, 0.0f, 10.0f - i), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-	}
+	//// X軸(横)方向のライン描画(複数)
+	//for (size_t i = 0; i < 21; i++)
+	//{
+	//	PrimitiveDrawer::GetInstance()->DrawLine3d(Vector3(10.0f, 0.0f, 10.0f - i), Vector3(-10.0f, 0.0f, 10.0f - i), Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	//}
 
 	// 3Dオブジェクト描画後処理
 	Model::PostDraw();
@@ -205,6 +207,9 @@ void GameScene::Draw()
 	/// <summary>
 	/// ここに前景スプライトの描画処理を追加できる
 	/// </summary>
+	
+	// スプライト描画
+	if (isScopeMode) sprite_->Draw();
 
 	// デバッグテキストの描画
 	debugText_->DrawAll(commandList);

@@ -59,13 +59,18 @@ public:
 	float viewAngle = 0.0f;
 	
 	// テクスチャハンドル
-	uint32_t textureHandle_ = 0;
+	uint32_t textureHandle_[2]{};
+
+	// スプライト
+	Sprite * sprite_ = nullptr;
 
 	// 3Dモデル
 	Model * model_ = nullptr;
 
+	bool isScopeMode = false;
+
 	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[9][9];
+	WorldTransform worldTransforms_[100];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
