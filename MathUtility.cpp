@@ -3,10 +3,10 @@
 int MathUtility::Clamp(int value, int max, int min)
 {
 	// 値が最大値を上回っていたら最大値を返す
-	if (value > max) return max;
+	if (value >= max) return max;
 
 	// 値が最小値を下回っていたら最小値を返す
-	if (value < min) return min;
+	if (value <= min) return min;
 
 	// どちらにも当てはまらなかったら値をそのまま返す
 	return value;
@@ -15,10 +15,10 @@ int MathUtility::Clamp(int value, int max, int min)
 float MathUtility::Clamp(float value, float max, float min)
 {
 	// 値が最大値を上回っていたら最大値を返す
-	if (value > max) return max;
+	if (value >= max) return max;
 
 	// 値が最小値を下回っていたら最小値を返す
-	if (value < min) return min;
+	if (value <= min) return min;
 
 	// どちらにも当てはまらなかったら値をそのまま返す
 	return value;

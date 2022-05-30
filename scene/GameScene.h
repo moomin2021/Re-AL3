@@ -69,6 +69,8 @@ public:
 
 	bool isScopeMode = false;
 
+	float fovAngle = 40.0f;
+
 	// ワールドトランスフォーム
 	WorldTransform worldTransforms_[100];
 

@@ -117,13 +117,40 @@ void GameScene::Update()
 
 	// スコープモード
 	{
-		if (input_->TriggerKey(DIK_SPACE))
-		{
-			// スコープモードが真だった場合スコープモードを偽に
-			if (isScopeMode) isScopeMode = false, viewProjection_.fovAngleY = MathUtility::Degree2Radian(40.0f);
+		// 視野角を変える速度
+		float fovSpeed = 2.0f;
 
-			// スコープモードが偽だった場合スコープモードを真に
-			else isScopeMode = true, viewProjection_.fovAngleY = MathUtility::Degree2Radian(20.0f);
+		// スペースキーが押されている場合
+		if (input_->PushKey(DIK_SPACE))
+		{
+			// スコープモードを真に
+			isScopeMode = true;
+
+			// 垂直方向視野角を減少させる
+			fovAngle -= fovSpeed;
+
+			// 一定の値からは値が減らないようにする
+			fovAngle = MathUtility::Clamp(fovAngle, 40.0f, 20.0f);
+
+			// 垂直方向視野角の値を設定する
+			viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
+
+		}
+
+		// スペースキーが押されていない場合
+		else
+		{
+			// スコープモードを偽に
+			isScopeMode = false;
+
+			// 垂直方向視野角を増加させる
+			fovAngle += fovSpeed;
+
+			// 一定の値からは値が増えないようにする
+			fovAngle = MathUtility::Clamp(fovAngle, 40.0f, 20.0f);
+
+			// 垂直方向視野角の値を設定する
+			viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
 		}
 	}
 
