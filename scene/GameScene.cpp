@@ -3,6 +3,7 @@
 #include <cassert>
 #include "AxisIndicator.h"
 #include "PrimitiveDrawer.h"
+#include "XMFLOAT3.h"
 #include <random>
 
 GameScene::GameScene() {}
@@ -58,27 +59,34 @@ void GameScene::Initialize()
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&viewProjection_);
 
-	// オブジェクト間の間隔
-	const int objectSpace = 5;
+	// 親の設定
+	worldTransforms_[0].Initialize();
 
-	// オブジェクトを配置する半径
-	const int radius = 20;
+	// 子の設定
 
-	// オブジェクト初期化
-	for (size_t i = 0; i < _countof(worldTransforms_); i++)
-	{
-		// オブジェクトの位置を指定
-		worldTransforms_[i].translation_ = { dist(engine), dist(engine), dist(engine) };
+	// (1)
+	worldTransforms_[1].translation_ = { -2.0f, 0.0f, -2.0f };
+	worldTransforms_[1].parent_ = &worldTransforms_[0];
+	worldTransforms_[1].Initialize();
 
-		// オブジェクトの回転を指定
-		worldTransforms_[i].rotation_ = { rotDist(engine), rotDist(engine), rotDist(engine) };
+	// (2)
+	worldTransforms_[2].translation_ = { 0.0f, 0.0f, -2.0f };
+	worldTransforms_[2].parent_ = &worldTransforms_[0];
+	worldTransforms_[2].Initialize();
 
-		// オブジェクト初期化
-		worldTransforms_[i].Initialize();
-	}
+	// (3)
+	worldTransforms_[3].translation_ = { 2.0f, 0.0f, -2.0f };
+	worldTransforms_[3].parent_ = &worldTransforms_[0];
+	worldTransforms_[3].Initialize();
 
-	// 垂直方向視野角を設定
-	viewProjection_.fovAngleY = MathUtility::Degree2Radian(90.0f);
+	// マップ内に置くオブジェクトの設定
+	worldTransforms_[4].translation_ = { 4.0f, 0.0f, 0.0f };
+	worldTransforms_[4].Initialize();
+	worldTransforms_[5].translation_ = { -4.0f, 0.0f, 0.0f };
+	worldTransforms_[5].Initialize();
+
+	// カメラ視点座標を設定
+	viewProjection_.eye = { 0, 10, -15 };
 
 	// ビュープロジェクションの初期化
 	viewProjection_.Initialize();
@@ -90,108 +98,146 @@ void GameScene::Update()
 	// デバックカメラの更新
 	debugCamera_->Update();
 
+	// 操作のモード切替
+	if (input_->TriggerKey(DIK_Q))
+	{
+		if (controlMode == MODE1) controlMode = MODE2;
+		else controlMode = MODE1;
+	}
+
+	// --バイオ歩き-- //
+	if (controlMode == MODE1) {
+		// 前方ベクトル
+		XMFLOAT3 forwardVec = { 0, 0, 1 };
+
+		XMFLOAT3 backwardVec = { 0, 0, -1 };
+
+		// 計算結果
+		XMFLOAT3 resultVec = { 0, 0, 0 };
+
+		// 移動ベクトル
+		XMFLOAT3 move = { 0, 0, 0 };
+
+		// 右キー入力で右回転
+		if (input_->PushKey(DIK_RIGHT))
+		{
+			worldTransforms_[0].rotation_.y += 0.1f;
+		}
+
+		// 左キー入力で左回転
+		if (input_->PushKey(DIK_LEFT))
+		{
+			worldTransforms_[0].rotation_.y -= 0.1f;
+		}
+
+		resultVec.x = cosf(worldTransforms_[0].rotation_.y) * forwardVec.x +
+			sinf(worldTransforms_[0].rotation_.y) * forwardVec.z;
+		resultVec.z = -sinf(worldTransforms_[0].rotation_.y) * forwardVec.x +
+			cosf(worldTransforms_[0].rotation_.y) * forwardVec.z;
+
+		// 上キー入力で前方に移動
+		if (input_->PushKey(DIK_UP))
+		{
+			move = { resultVec.x, 0, resultVec.z };
+		}
+
+		// 下キー入力で前方に移動
+		if (input_->PushKey(DIK_DOWN))
+		{
+			move = { -resultVec.x, 0, -resultVec.z };
+		}
+
+		worldTransforms_[0].translation_.x += move.x * 0.2f;
+		worldTransforms_[0].translation_.y += move.y * 0.2f;
+		worldTransforms_[0].translation_.z += move.z * 0.2f;
+
+		viewProjection_.eye.x = worldTransforms_[0].translation_.x - resultVec.x * 10.0f;
+		viewProjection_.eye.y = 10.0f;
+		viewProjection_.eye.z = worldTransforms_[0].translation_.z - resultVec.z * 10.0f;
+
+		viewProjection_.target = worldTransforms_[0].translation_;
+	}
+
+	// カメラ視点の前後左右移動
+	if (controlMode == MODE2) {
+		// 正面ベクトル
+		Vector3 forwardVec = {viewProjection_.target.x - viewProjection_.eye.x, 0.0f, viewProjection_.target.z - viewProjection_.eye.z};
+
+		// 正規化
+		forwardVec = forwardVec.normalize();
+
+		// 右ベクトル
+		Vector3 rightVec = Vector3(0, 1, 0).cross(forwardVec);
+
+		// 正規化
+		rightVec = rightVec.normalize();
+
+		// 動く速度
+		float moveSpeed = 0.5;
+
+		// 結果加算する値
+		Vector3 resultVec{};
+
+		// 前後移動
+		if (input_->PushKey(DIK_W))
+		{
+			resultVec += forwardVec * moveSpeed;
+		}
+		else if (input_->PushKey(DIK_S))
+		{
+			resultVec += -forwardVec * moveSpeed;
+		}
+
+		// 左右移動
+		if (input_->PushKey(DIK_D))
+		{
+			resultVec += rightVec * moveSpeed;
+		}
+		else if (input_->PushKey(DIK_A))
+		{
+			resultVec += -rightVec * moveSpeed;
+		}
+
+		worldTransforms_[0].translation_ += resultVec;
+
+		resultVec = { 0, 0, 0 };
+
+		// カメラの前後移動
+		if (input_->PushKey(DIK_UP))
+		{
+			resultVec += forwardVec * moveSpeed;
+		}
+		else if (input_->PushKey(DIK_DOWN))
+		{
+			resultVec += -forwardVec * moveSpeed;
+		}
+
+		// カメラの左右移動
+		if (input_->PushKey(DIK_RIGHT))
+		{
+			resultVec += rightVec * moveSpeed;
+		}
+		else if (input_->PushKey(DIK_LEFT))
+		{
+			resultVec += -rightVec * moveSpeed;
+		}
+
+		viewProjection_.eye += resultVec;
+		viewProjection_.target += resultVec;
+	}
+
 	for (size_t i = 0; i < _countof(worldTransforms_); i++)
 	{
 		// 行列の再計算
 		worldTransforms_[i].UpdateMatrix();
 	}
 
-	// 注視点の移動
-	{
-		// 視点の移動ベクトル
-		Vector3 move = { 0, 0, 0 };
-
-		// 視点の移動速度
-		const float targetSpeed = 0.2f;
-
-		// 視点の横移動計算
-		move.x = ((input_->PushKey(DIK_RIGHT)) - (input_->PushKey(DIK_LEFT))) * targetSpeed;
-
-		// 視点の縦移動計算
-		move.y = ((input_->PushKey(DIK_UP)) - (input_->PushKey(DIK_DOWN))) * targetSpeed;
-
-		// ベクトルの加算
-		viewProjection_.target += move;
-
-		// 視点を制限
-		viewProjection_.target.x = MathUtility::Clamp(viewProjection_.target.x, 10.0f, -10.0f);
-		viewProjection_.target.y = MathUtility::Clamp(viewProjection_.target.y, 10.0f, -10.0f);
-	}
-
-	// スコープモード
-	{
-		// スペースを押した場合
-		if (input_->TriggerKey(DIK_SPACE))
-		{
-			// スコープモードが真だったらスコープモードを偽にする
-			if (isScopeMode) isScopeMode = false, fovAngle = 90.0f, viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
-
-			// スコープモードが偽だったらスコープモードを真にする
-			else isScopeMode = true, fovAngle = 30.0f, viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
-		}
-
-		// 視野角が変わるスピード
-		float fovSpeed = 2.0f;
-
-		// スコープモードが真だった場合
-		if (isScopeMode)
-		{
-			// Wキーが押されたら
-			if (input_->PushKey(DIK_W))
-			{
-				scopeMagnification = 8;
-			}
-
-			// Sキーが押されたら
-			else if (input_->PushKey(DIK_S))
-			{
-				scopeMagnification = 4;
-			}
-
-			if (scopeMagnification == 4)
-			{
-				// 垂直方向視野角を増加させる
-				fovAngle += fovSpeed;
-
-				// 一定の値からは値が減らないようにする
-				fovAngle = MathUtility::Clamp(fovAngle, 30.0f, 15.0f);
-
-				// 垂直方向視野角の値を設定する
-				viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
-			}
-
-			if (scopeMagnification == 8)
-			{
-				// 垂直方向視野角を増加させる
-				fovAngle -= fovSpeed;
-
-				// 一定の値からは値が減らないようにする
-				fovAngle = MathUtility::Clamp(fovAngle, 30.0f, 15.0f);
-
-				// 垂直方向視野角の値を設定する
-				viewProjection_.fovAngleY = MathUtility::Degree2Radian(fovAngle);
-			}
-		}
-	}
-
 	// 行列の再計算
 	viewProjection_.UpdateMatrix();
 
 	// デバッグ用表示
-	debugText_->SetPos(50, 50);
-	debugText_->Printf("eye:(%f, %f, %f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
-
-	debugText_->SetPos(50, 70);
-	debugText_->Printf("target:(%f, %f, %f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
-
-	debugText_->SetPos(50, 90);
-	debugText_->Printf("up:(%f, %f, %f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
-
-	debugText_->SetPos(50, 110);
-	debugText_->Printf("fovAngleY(Degree):%f", MathUtility::Radian2Degree(viewProjection_.fovAngleY));
-
-	debugText_->SetPos(50, 130);
-	debugText_->Printf("nearZ:%f", viewProjection_.nearZ);
+	//debugText_->SetPos(50, 50);
+	//debugText_->Printf("Qキーでモード切替");
 }
 
 void GameScene::Draw()

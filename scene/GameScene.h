@@ -73,12 +73,20 @@ public:
 
 	int scopeMagnification = 4.0f;
 
+	bool controlMode = 0;
+
 	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[100];
+	WorldTransform worldTransforms_[6];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
 
 	// デバッグのカメラ
 	DebugCamera * debugCamera_ = nullptr;
+};
+
+enum ControlMode
+{
+	MODE1 = 0,
+	MODE2 = 1
 };
