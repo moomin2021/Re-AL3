@@ -57,13 +57,17 @@ void GameScene::Initialize()
 	/// <summary>
 	/// 各オブジェクトの位置を設定して人型にする
 	/// </summary>
+	
+	// --大元の位置設定-- //
+	worldTransforms_[PartId::kRoot].translation_ = { 0.0f, 0.0f, 0.0f };
 
 	// --頭の位置設定-- //
 	worldTransforms_[PartId::kHead].translation_ = { 0.0f, 3.0f, 0.0f };
+	worldTransforms_[PartId::kHead].parent_ = &worldTransforms_[PartId::kRoot];
 
 	// --胸の位置と親子構造設定-- //
-	worldTransforms_[PartId::kChest].translation_ = { 0.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kChest].parent_ = &worldTransforms_[PartId::kHead];
+	worldTransforms_[PartId::kChest].translation_ = { 0.0f, 0.0f, 0.0f };
+	worldTransforms_[PartId::kChest].parent_ = &worldTransforms_[PartId::kRoot];
 
 	// --左腕の位置と親子構造設定-- //
 	worldTransforms_[PartId::kArmL].translation_ = {-3.0f, 0.0f, 0.0f};
@@ -75,7 +79,7 @@ void GameScene::Initialize()
 
 	// --尻の位置と親子構造設定-- //
 	worldTransforms_[PartId::kHip].translation_ = { 0.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kHip].parent_ = &worldTransforms_[PartId::kChest];
+	worldTransforms_[PartId::kHip].parent_ = &worldTransforms_[PartId::kRoot];
 
 	// --左足の位置と親子構造設定-- //
 	worldTransforms_[PartId::kLegL].translation_ = { -3.0f, -3.0f, 0.0f };
@@ -106,20 +110,40 @@ void GameScene::Initialize()
 void GameScene::Update()
 {
 
-	// --腕の回転処理-- //
+	// --オブジェクト全体の横移動処理-- //
 	{
+		// --移動量
+		float moveSpeed = 0.8f;
+
+		// --キーボードのADが押されたら横移動させる
+		worldTransforms_[PartId::kRoot].translation_.x +=
+			(input_->PushKey(DIK_D) - input_->PushKey(DIK_A)) * moveSpeed;
+	}
+
+	// --オブジェクト全体の回転処理-- //
+	{
+		// --回転量
+		float rotaSpeed = 2.0f;
+
+		// --キーボードの横アローキーが押されたら回転する
+		worldTransforms_[PartId::kRoot].rotation_.y +=
+			MathUtility::Degree2Radian((input_->PushKey(DIK_LEFT) - input_->PushKey(DIK_RIGHT)) * rotaSpeed);
+	}
+
+	// --腕足の回転処理-- //
+	{
+		// --腕と足の回転スピード-- //
+		float rotaSpeed = 10.0f;
+
 		// --左腕の回転処理
 		worldTransforms_[PartId::kArmL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
 		
 		// --右腕の回転処理
 		worldTransforms_[PartId::kArmR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-	}
-
-	// --足の回転処理-- //
-	{
+	
 		// --左足の回転処理
 		worldTransforms_[PartId::kLegL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-	
+
 		// --右足の回転処理
 		worldTransforms_[PartId::kLegR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
 	}

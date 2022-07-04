@@ -56,6 +56,7 @@ class GameScene {
 public:
 	enum PartId
 	{
+		kRoot,// --> 大元
 		kHead,// --> 頭
 		kChest,// -> 胸
 		kArmL,// --> 左腕
@@ -64,9 +65,6 @@ public:
 		kLegL,// --> 左足
 		kLegR// ---> 右足
 	};
-	
-	// --腕と足の回転スピード-- //
-	float rotaSpeed = 10.0f;
 
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
@@ -81,7 +79,7 @@ public:
 	Model * model_ = nullptr;
 
 	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[7];
+	WorldTransform worldTransforms_[8];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
