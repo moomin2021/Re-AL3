@@ -54,27 +54,34 @@ class GameScene {
 	/// 
 	
 public:
+	enum PartId
+	{
+		kHead,// --> 頭
+		kChest,// -> 胸
+		kArmL,// --> 左腕
+		kArmR,// --> 右腕
+		kHip,// ---> 尻
+		kLegL,// --> 左足
+		kLegR// ---> 右足
+	};
 	
+	// --腕と足の回転スピード-- //
+	float rotaSpeed = 10.0f;
+
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
 	
 	// テクスチャハンドル
-	uint32_t textureHandle_[3]{};
+	uint32_t textureHandle_;
 
 	// スプライト
-	Sprite * sprite_[2]{};
+	Sprite * sprite_;
 
 	// 3Dモデル
 	Model * model_ = nullptr;
 
-	bool isScopeMode = false;
-
-	float fovAngle = 90.0f;
-
-	int scopeMagnification = 4.0f;
-
 	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[100];
+	WorldTransform worldTransforms_[7];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
