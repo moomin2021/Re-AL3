@@ -133,19 +133,39 @@ void GameScene::Update()
 	// --腕足の回転処理-- //
 	{
 		// --腕と足の回転スピード-- //
-		float rotaSpeed = 10.0f;
+		float rotaSpeed = 1.0f;
 
-		// --左腕の回転処理
-		worldTransforms_[PartId::kArmL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
-		
-		// --右腕の回転処理
-		worldTransforms_[PartId::kArmR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-	
-		// --左足の回転処理
-		worldTransforms_[PartId::kLegL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+		if (angleChange) {
+			// --左腕の回転処理
+			worldTransforms_[PartId::kArmL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
 
-		// --右足の回転処理
-		worldTransforms_[PartId::kLegR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+			// --右腕の回転処理
+			worldTransforms_[PartId::kArmR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+
+			// --左足の回転処理
+			worldTransforms_[PartId::kLegL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+
+			// --右足の回転処理
+			worldTransforms_[PartId::kLegR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+		}
+		else {
+			// --左腕の回転処理
+			worldTransforms_[PartId::kArmL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+
+			// --右腕の回転処理
+			worldTransforms_[PartId::kArmR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+
+			// --左足の回転処理
+			worldTransforms_[PartId::kLegL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+
+			// --右足の回転処理
+			worldTransforms_[PartId::kLegR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+		}
+
+		// --現在の左腕の角度-- //
+		float lArmAngle = MathUtility::Radian2Degree(worldTransforms_[PartId::kArmL].rotation_.x);
+
+		if (lArmAngle > 45 || lArmAngle < -45) angleChange = !angleChange;
 	}
 
 	// --各オブジェクトの再計算-- //
@@ -169,11 +189,14 @@ void GameScene::Update()
 	debugText_->SetPos(50, 90);
 	debugText_->Printf("up:(%f, %f, %f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
 
+	//debugText_->SetPos(50, 110);
+	//debugText_->Printf("fovAngleY(Degree):%f", MathUtility::Radian2Degree(viewProjection_.fovAngleY));
+
 	debugText_->SetPos(50, 110);
-	debugText_->Printf("fovAngleY(Degree):%f", MathUtility::Radian2Degree(viewProjection_.fovAngleY));
+	debugText_->Printf("lArm.x:%f", MathUtility::Radian2Degree(worldTransforms_[kArmL].rotation_.x));
 
 	debugText_->SetPos(50, 130);
-	debugText_->Printf("nearZ:%f", viewProjection_.nearZ);
+	debugText_->Printf("angleChange:%d", angleChange);
 }
 
 void GameScene::Draw()

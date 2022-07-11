@@ -66,6 +66,10 @@ public:
 		kLegR// ---> 右足
 	};
 
+	bool angleChange = false;
+
+	float angle = 0.0f;
+
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
 	
