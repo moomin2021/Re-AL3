@@ -146,10 +146,27 @@ void GameScene::Update()
 			MathUtility::Degree2Radian((input_->PushKey(DIK_LEFT) - input_->PushKey(DIK_RIGHT)) * rotaSpeed);
 	}
 
+	// --ジャンプ処理-- //
+	{
+		// --スペースキーを押したら
+		if (input_->TriggerKey(DIK_SPACE) && worldTransforms_[PartId::kRoot].translation_.y <= 5) {
+			gravity = 1.0f;
+		}
+
+		gravity -= 0.1f;
+
+		gravity = MathUtility::Clamp(gravity, 1.0f, -5.0f);
+
+		worldTransforms_[PartId::kRoot].translation_.y += gravity;
+
+		worldTransforms_[PartId::kRoot].translation_.y = MathUtility::Clamp(worldTransforms_[kRoot].translation_.y, 20.0f, 5.0f);
+	}
+
 	// --腕足の回転処理-- //
 	{
 		// --腕と足の回転スピード-- //
 		float rotaSpeed = 5.0f;
+		if (input_->PushKey(DIK_LSHIFT)) rotaSpeed = 10.0f;
 
 		if (input_->PushKey(DIK_W)) {
 			if (angleChange) {
@@ -210,11 +227,11 @@ void GameScene::Update()
 	//debugText_->SetPos(50, 110);
 	//debugText_->Printf("fovAngleY(Degree):%f", MathUtility::Radian2Degree(viewProjection_.fovAngleY));
 
-	debugText_->SetPos(50, 110);
-	debugText_->Printf("lArm.x:%f", MathUtility::Radian2Degree(worldTransforms_[kArmL].rotation_.x));
+	//debugText_->SetPos(50, 110);
+	//debugText_->Printf("gravity:%f", gravity);
 
-	debugText_->SetPos(50, 130);
-	debugText_->Printf("angleChange:%d", angleChange);
+	//debugText_->SetPos(50, 130);
+	//debugText_->Printf("y:%d", worldTransforms_[PartId::kRoot].translation_.y);
 }
 
 void GameScene::Draw()

@@ -76,6 +76,8 @@ public:
 
 	// カメラ上方向の角度
 	float viewAngle = 0.0f;
+
+	float gravity = 0.0f;
 	
 	// テクスチャハンドル
 	uint32_t textureHandle_;
