@@ -61,9 +61,13 @@ public:
 		kChest,// -> 胸
 		kArmL,// --> 左腕
 		kArmR,// --> 右腕
+		kHandL,// -> 左手
+		kHandR,// -> 右手
 		kHip,// ---> 尻
-		kLegL,// --> 左足
-		kLegR// ---> 右足
+		kLegL1,// -> 左足1
+		kLegL2,// -> 左足2
+		kLegR1,// -> 右足1
+		kLegR2// --> 右足2
 	};
 
 	bool angleChange = false;
@@ -83,7 +87,7 @@ public:
 	Model * model_ = nullptr;
 
 	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[8];
+	WorldTransform worldTransforms_[12];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;

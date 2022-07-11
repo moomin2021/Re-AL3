@@ -59,7 +59,7 @@ void GameScene::Initialize()
 	/// </summary>
 	
 	// --大元の位置設定-- //
-	worldTransforms_[PartId::kRoot].translation_ = { 0.0f, 0.0f, 0.0f };
+	worldTransforms_[PartId::kRoot].translation_ = { 0.0f, 5.0f, 0.0f };
 
 	// --頭の位置設定-- //
 	worldTransforms_[PartId::kHead].translation_ = { 0.0f, 3.0f, 0.0f };
@@ -70,24 +70,40 @@ void GameScene::Initialize()
 	worldTransforms_[PartId::kChest].parent_ = &worldTransforms_[PartId::kRoot];
 
 	// --左腕の位置と親子構造設定-- //
-	worldTransforms_[PartId::kArmL].translation_ = {-3.0f, 0.0f, 0.0f};
+	worldTransforms_[PartId::kArmL].translation_ = { -3.0f, 0.0f, 0.0f };
 	worldTransforms_[PartId::kArmL].parent_ = &worldTransforms_[PartId::kChest];
+
+	// --左手の位置と親子構造設定-- //
+	worldTransforms_[PartId::kHandL].translation_ = { 0.0f, -2.0f, 0.0f };
+	worldTransforms_[PartId::kHandL].parent_ = &worldTransforms_[PartId::kArmL];
 
 	// --右腕の位置と親子関係設定-- //
 	worldTransforms_[PartId::kArmR].translation_ = { 3.0f, 0.0f, 0.0f };
 	worldTransforms_[PartId::kArmR].parent_ = &worldTransforms_[PartId::kChest];
 
+	// --右手の位置と親子関係設定-- //
+	worldTransforms_[PartId::kHandR].translation_ = { 0.0f, -2.0f, 0.0f };
+	worldTransforms_[PartId::kHandR].parent_ = &worldTransforms_[PartId::kArmR];
+
 	// --尻の位置と親子構造設定-- //
 	worldTransforms_[PartId::kHip].translation_ = { 0.0f, -3.0f, 0.0f };
 	worldTransforms_[PartId::kHip].parent_ = &worldTransforms_[PartId::kRoot];
 
-	// --左足の位置と親子構造設定-- //
-	worldTransforms_[PartId::kLegL].translation_ = { -3.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kLegL].parent_ = &worldTransforms_[PartId::kHip];
+	// --左足1の位置と親子構造設定-- //
+	worldTransforms_[PartId::kLegL1].translation_ = { -2.0f, -3.0f, 0.0f };
+	worldTransforms_[PartId::kLegL1].parent_ = &worldTransforms_[PartId::kHip];
 
-	// --左足の位置と親子構造設定-- //
-	worldTransforms_[PartId::kLegR].translation_ = { 3.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kLegR].parent_ = &worldTransforms_[PartId::kHip];
+	// --左足2の位置と親子構造設定-- //
+	worldTransforms_[PartId::kLegL2].translation_ = { 0.0f, -2.0f, 0.0f };
+	worldTransforms_[PartId::kLegL2].parent_ = &worldTransforms_[PartId::kLegL1];
+
+	// --右足1の位置と親子構造設定-- //
+	worldTransforms_[PartId::kLegR1].translation_ = { 2.0f, -3.0f, 0.0f };
+	worldTransforms_[PartId::kLegR1].parent_ = &worldTransforms_[PartId::kHip];
+
+	// --右足2の位置と親子構造設定-- //
+	worldTransforms_[PartId::kLegR2].translation_ = { 0.0f, -2.0f, 0.0f };
+	worldTransforms_[PartId::kLegR2].parent_ = &worldTransforms_[PartId::kLegR1];
 
 	// --オブジェクト全体の初期化-- //
 	for (size_t i = 0; i < _countof(worldTransforms_); i++) {
@@ -133,33 +149,35 @@ void GameScene::Update()
 	// --腕足の回転処理-- //
 	{
 		// --腕と足の回転スピード-- //
-		float rotaSpeed = 1.0f;
+		float rotaSpeed = 5.0f;
 
-		if (angleChange) {
-			// --左腕の回転処理
-			worldTransforms_[PartId::kArmL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+		if (input_->PushKey(DIK_W)) {
+			if (angleChange) {
+				// --左腕の回転処理
+				worldTransforms_[PartId::kArmL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
 
-			// --右腕の回転処理
-			worldTransforms_[PartId::kArmR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+				// --右腕の回転処理
+				worldTransforms_[PartId::kArmR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
 
-			// --左足の回転処理
-			worldTransforms_[PartId::kLegL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+				// --左足の回転処理
+				worldTransforms_[PartId::kLegL1].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
 
-			// --右足の回転処理
-			worldTransforms_[PartId::kLegR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
-		}
-		else {
-			// --左腕の回転処理
-			worldTransforms_[PartId::kArmL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+				// --右足の回転処理
+				worldTransforms_[PartId::kLegR1].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+			}
+			else {
+				// --左腕の回転処理
+				worldTransforms_[PartId::kArmL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
 
-			// --右腕の回転処理
-			worldTransforms_[PartId::kArmR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+				// --右腕の回転処理
+				worldTransforms_[PartId::kArmR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
 
-			// --左足の回転処理
-			worldTransforms_[PartId::kLegL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
+				// --左足の回転処理
+				worldTransforms_[PartId::kLegL1].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
 
-			// --右足の回転処理
-			worldTransforms_[PartId::kLegR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+				// --右足の回転処理
+				worldTransforms_[PartId::kLegR1].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
+			}
 		}
 
 		// --現在の左腕の角度-- //
