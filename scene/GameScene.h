@@ -8,8 +8,8 @@
 #include "SafeDelete.h"
 #include "Sprite.h"
 #include "ViewProjection.h"
-#include "WorldTransform.h"
 #include "DebugCamera.h"
+#include "Player.h"
 
 /// <summary>
 /// ゲームシーン
@@ -69,15 +69,6 @@ public:
 		kLegR1,// -> 右足1
 		kLegR2// --> 右足2
 	};
-
-	bool angleChange = false;
-
-	float angle = 0.0f;
-
-	// カメラ上方向の角度
-	float viewAngle = 0.0f;
-
-	float gravity = 0.0f;
 	
 	// テクスチャハンドル
 	uint32_t textureHandle_;
@@ -88,12 +79,15 @@ public:
 	// 3Dモデル
 	Model * model_ = nullptr;
 
-	// ワールドトランスフォーム
-	WorldTransform worldTransforms_[12];
+	// --プレイヤー-- //
+	Player* player_ = nullptr;
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
 
 	// デバッグのカメラ
 	DebugCamera * debugCamera_ = nullptr;
+
+	// --デバックカメラ有効-- //
+	bool isDebugCameraActive_ = false;
 };

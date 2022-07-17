@@ -12,6 +12,7 @@ GameScene::~GameScene()
 	delete sprite_;
 	delete model_;
 	delete debugCamera_;
+	delete player_;
 }
 
 void GameScene::Initialize()
@@ -54,191 +55,73 @@ void GameScene::Initialize()
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&viewProjection_);
 
-	/// <summary>
-	/// 各オブジェクトの位置を設定して人型にする
-	/// </summary>
-	
-	// --大元の位置設定-- //
-	worldTransforms_[PartId::kRoot].translation_ = { 0.0f, 5.0f, 0.0f };
-
-	// --頭の位置設定-- //
-	worldTransforms_[PartId::kHead].translation_ = { 0.0f, 3.0f, 0.0f };
-	worldTransforms_[PartId::kHead].parent_ = &worldTransforms_[PartId::kRoot];
-
-	// --胸の位置と親子構造設定-- //
-	worldTransforms_[PartId::kChest].translation_ = { 0.0f, 0.0f, 0.0f };
-	worldTransforms_[PartId::kChest].parent_ = &worldTransforms_[PartId::kRoot];
-
-	// --左腕の位置と親子構造設定-- //
-	worldTransforms_[PartId::kArmL].translation_ = { -3.0f, 0.0f, 0.0f };
-	worldTransforms_[PartId::kArmL].parent_ = &worldTransforms_[PartId::kChest];
-
-	// --左手の位置と親子構造設定-- //
-	worldTransforms_[PartId::kHandL].translation_ = { 0.0f, -2.0f, 0.0f };
-	worldTransforms_[PartId::kHandL].parent_ = &worldTransforms_[PartId::kArmL];
-
-	// --右腕の位置と親子関係設定-- //
-	worldTransforms_[PartId::kArmR].translation_ = { 3.0f, 0.0f, 0.0f };
-	worldTransforms_[PartId::kArmR].parent_ = &worldTransforms_[PartId::kChest];
-
-	// --右手の位置と親子関係設定-- //
-	worldTransforms_[PartId::kHandR].translation_ = { 0.0f, -2.0f, 0.0f };
-	worldTransforms_[PartId::kHandR].parent_ = &worldTransforms_[PartId::kArmR];
-
-	// --尻の位置と親子構造設定-- //
-	worldTransforms_[PartId::kHip].translation_ = { 0.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kHip].parent_ = &worldTransforms_[PartId::kRoot];
-
-	// --左足1の位置と親子構造設定-- //
-	worldTransforms_[PartId::kLegL1].translation_ = { -2.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kLegL1].parent_ = &worldTransforms_[PartId::kHip];
-
-	// --左足2の位置と親子構造設定-- //
-	worldTransforms_[PartId::kLegL2].translation_ = { 0.0f, -2.0f, 0.0f };
-	worldTransforms_[PartId::kLegL2].parent_ = &worldTransforms_[PartId::kLegL1];
-
-	// --右足1の位置と親子構造設定-- //
-	worldTransforms_[PartId::kLegR1].translation_ = { 2.0f, -3.0f, 0.0f };
-	worldTransforms_[PartId::kLegR1].parent_ = &worldTransforms_[PartId::kHip];
-
-	// --右足2の位置と親子構造設定-- //
-	worldTransforms_[PartId::kLegR2].translation_ = { 0.0f, -2.0f, 0.0f };
-	worldTransforms_[PartId::kLegR2].parent_ = &worldTransforms_[PartId::kLegR1];
-
-	// --オブジェクト全体の初期化-- //
-	for (size_t i = 0; i < _countof(worldTransforms_); i++) {
-		worldTransforms_[i].Initialize();
-	}
-
 	// --カメラの視点座標の設定-- //
-	viewProjection_.eye = { 0.0f, 3.0f, -30.0f };
+	viewProjection_.eye = { 0.0f, 0.0f, -50.0f };
 
 	// --カメラの注視点を設定-- //
-	viewProjection_.target = { 0.0f, 3.0f, 0.0f };
+	viewProjection_.target = { 0.0f, 0.0f, 0.0f };
 
 	// --カメラの垂直方向視野角の設定-- //
 	viewProjection_.fovAngleY = MathUtility::Degree2Radian(45.0f);
 
 	// --ビュープロジェクションの初期化-- //
 	viewProjection_.Initialize();
+
+	// --プレイヤーの生成-- //
+	player_ = new Player();
+
+	// --プレイヤーの初期化-- //
+	player_->Initialize(model_, textureHandle_);
 }
 
 void GameScene::Update()
 {
 
-	// --オブジェクト全体の横移動処理-- //
-	{
-		// --移動量
-		float moveSpeed = 0.8f;
+	// --デバックカメラ有効化-- //
+#ifdef _DEBUG
+	if (input_->TriggerKey(DIK_B)) {
+		isDebugCameraActive_ = true;
+	}
+#endif
 
-		// --キーボードのADが押されたら横移動させる
-		worldTransforms_[PartId::kRoot].translation_.x +=
-			(input_->PushKey(DIK_D) - input_->PushKey(DIK_A)) * moveSpeed;
+	// --プレイヤーの更新処理-- //
+	player_->Update();
+
+	// --カメラ処理-- //
+	if (isDebugCameraActive_) {
+		
+		// --デバックカメラの更新
+		debugCamera_->Update();
+
+		// --デバックカメラビュー行列
+		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
+
+		// --デバックカメラプロジェクション行列
+		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
+
+		// --ビュープロジェクション行列の再計算と転送
+		viewProjection_.UpdateMatrix();
+		viewProjection_.TransferMatrix();
+	}
+	else {
+		// --行列の再計算-- //
+		viewProjection_.UpdateMatrix();
 	}
 
-	// --オブジェクト全体の回転処理-- //
-	{
-		// --回転量
-		float rotaSpeed = 2.0f;
-
-		// --キーボードの横アローキーが押されたら回転する
-		worldTransforms_[PartId::kRoot].rotation_.y +=
-			MathUtility::Degree2Radian((input_->PushKey(DIK_LEFT) - input_->PushKey(DIK_RIGHT)) * rotaSpeed);
-	}
-
-	// --ジャンプ処理-- //
-	{
-		// --スペースキーを押したら
-		if (input_->TriggerKey(DIK_SPACE) && worldTransforms_[PartId::kRoot].translation_.y <= 5) {
-			gravity = 1.0f;
-		}
-
-		gravity -= 0.1f;
-
-		gravity = MathUtility::Clamp(gravity, 1.0f, -5.0f);
-
-		worldTransforms_[PartId::kRoot].translation_.y += gravity;
-
-		worldTransforms_[PartId::kRoot].translation_.y = MathUtility::Clamp(worldTransforms_[kRoot].translation_.y, 20.0f, 5.0f);
-	}
-
-	// --腕足の回転処理-- //
-	{
-		// --腕と足の回転スピード-- //
-		float rotaSpeed = 5.0f;
-		if (input_->PushKey(DIK_LSHIFT)) rotaSpeed = 10.0f;
-
-		if (input_->PushKey(DIK_W)) {
-			if (angleChange) {
-				// --左腕の回転処理
-				worldTransforms_[PartId::kArmL].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
-
-				// --右腕の回転処理
-				worldTransforms_[PartId::kArmR].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-
-				// --左足の回転処理
-				worldTransforms_[PartId::kLegL1].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-
-				// --右足の回転処理
-				worldTransforms_[PartId::kLegR1].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
-			}
-			else {
-				// --左腕の回転処理
-				worldTransforms_[PartId::kArmL].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-
-				// --右腕の回転処理
-				worldTransforms_[PartId::kArmR].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
-
-				// --左足の回転処理
-				worldTransforms_[PartId::kLegL1].rotation_.x -= MathUtility::Degree2Radian(rotaSpeed);
-
-				// --右足の回転処理
-				worldTransforms_[PartId::kLegR1].rotation_.x += MathUtility::Degree2Radian(rotaSpeed);
-			}
-		}
-
-		// --現在の左腕の角度-- //
-		float lArmAngle = MathUtility::Radian2Degree(worldTransforms_[PartId::kArmL].rotation_.x);
-
-		if (lArmAngle > 45 || lArmAngle < -45) angleChange = !angleChange;
-	}
-
-	// --各オブジェクトの再計算-- //
-	for (size_t i = 0; i < _countof(worldTransforms_); i++) {
-		worldTransforms_[i].UpdateMatrix();
-	}
-
-	// --行列の再計算-- //
-	viewProjection_.UpdateMatrix();
-
-	// --デバックカメラの更新-- //
-	debugCamera_->Update();
 
 	// --デバッグ用表示-- //
 	debugText_->SetPos(50, 50);
 	debugText_->Printf("eye:(%f, %f, %f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
 
-	debugText_->SetPos(50, 70);
-	debugText_->Printf("target:(%f, %f, %f)", viewProjection_.target.x, viewProjection_.target.y, viewProjection_.target.z);
-
-	debugText_->SetPos(50, 90);
-	debugText_->Printf("up:(%f, %f, %f)", viewProjection_.up.x, viewProjection_.up.y, viewProjection_.up.z);
-
-	//debugText_->SetPos(50, 110);
-	//debugText_->Printf("fovAngleY(Degree):%f", MathUtility::Radian2Degree(viewProjection_.fovAngleY));
-
-	//debugText_->SetPos(50, 110);
-	//debugText_->Printf("gravity:%f", gravity);
-
-	//debugText_->SetPos(50, 130);
-	//debugText_->Printf("y:%d", worldTransforms_[PartId::kRoot].translation_.y);
+	debugText_->SetPos(50, 50);
+	debugText_->Printf("DebugCameraActive:%d", isDebugCameraActive_);
 }
 
 void GameScene::Draw()
 {
 
 	// コマンドリストの取得
-	ID3D12GraphicsCommandList * commandList = dxCommon_->GetCommandList();
+	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
 
 #pragma region 背景スプライト描画
 	// 背景スプライト描画前処理
@@ -264,9 +147,11 @@ void GameScene::Draw()
 
 	// --3Dモデル追加-- //
 
-	for (size_t i = 0; i < _countof(worldTransforms_); i++) {
-		model_->Draw(worldTransforms_[i], viewProjection_, textureHandle_);
-	}
+	// --プレイヤーの描画処理-- //
+	player_->Draw(viewProjection_);
+
+	// --デバックカメラ
+	//model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
 
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
 
