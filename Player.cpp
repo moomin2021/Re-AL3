@@ -18,11 +18,11 @@ void Player::Attack() {
 	// --スペースキーを押したら-- //
 	if (input_->TriggerKey(DIK_SPACE)) {
 		// --弾を生成し、初期化
-		PlayerBullet* newBullet = new PlayerBullet();
+		std::unique_ptr<PlayerBullet> newBullet = std::make_unique<PlayerBullet>();
 		newBullet->Initialize(model_, worldTransform_.translation_);
 
 		// --弾を登録する
-		bullet_ = newBullet;
+		bullets_.push_back(std::move(newBullet));
 	}
 }
 
@@ -89,7 +89,7 @@ void Player::Update() {
 	Attack();
 
 	// --弾更新-- //
-	if (bullet_) bullet_->Update();
+	for (std::unique_ptr<PlayerBullet>& bullet : bullets_) bullet->Update();
 
 	// --デバックテキスト-- //
 	{
@@ -112,7 +112,7 @@ void Player::Draw(ViewProjection viewProjection) {
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
 
 	// --弾の描画-- //
-	if (bullet_) bullet_->Draw(viewProjection);
+	for (std::unique_ptr<PlayerBullet>& bullet : bullets_) bullet->Draw(viewProjection);
 }
 
 /// --END-- ///

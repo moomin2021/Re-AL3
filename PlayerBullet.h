@@ -15,6 +15,8 @@ private:
 	uint32_t textureHandle_ = 0u;
 
 public:
+	~PlayerBullet();
+
 	// --‰Šú‰»ˆ—-- //
 	void Initialize(Model* model, const Vector3& position);
 

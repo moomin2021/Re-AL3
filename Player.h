@@ -5,6 +5,8 @@
 #include "DebugText.h"
 #include "ViewProjection.h"
 #include "PlayerBullet.h"
+#include <memory>
+#include <list>
 
 class Player {
 private:
@@ -24,7 +26,7 @@ private:
 	DebugText* debugText_ = nullptr;
 	
 	// --弾-- //
-	PlayerBullet* bullet_ = nullptr;
+	std::list<std::unique_ptr<PlayerBullet>> bullets_;
 
 private:
 	// --キャラクターの旋回処理-- //

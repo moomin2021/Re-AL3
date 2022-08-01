@@ -2,6 +2,11 @@
 #include "PlayerBullet.h"
 #include <cassert>
 
+
+PlayerBullet::~PlayerBullet() {
+
+}
+
 // --初期化処理-- //
 void PlayerBullet::Initialize(Model* model, const Vector3& position) {
 	// --NULLポインタチェック-- //
