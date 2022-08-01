@@ -85,6 +85,9 @@ public:
 	// --Ray-- //
 	WorldTransform ray_[2];
 
+	// --当たり判定可視化用オブジェクト-- //
+	WorldTransform objectCol;
+
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
 
@@ -93,4 +96,6 @@ public:
 
 	// --デバックカメラ有効-- //
 	bool isDebugCameraActive_ = false;
+
+	bool col = false;
 };

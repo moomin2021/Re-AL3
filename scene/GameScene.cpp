@@ -71,6 +71,7 @@ void GameScene::Initialize()
 	enemy_.translation_ = { 0.0f, 0.0f, 10.0f };
 	enemy_.Initialize();
 
+	// --Ray-- //
 	ray_[0].translation_ = { 0.0f, 0.0f, -20.0f };
 	ray_[0].Initialize();
 
@@ -78,6 +79,11 @@ void GameScene::Initialize()
 	ray_[1].translation_ = { 0.0f, 0.0f, 15.0f };
 	ray_[1].scale_ = { 0.1f, 0.1f, 15.0f };
 	ray_[1].Initialize();
+
+	// --当たり判定可視化用-- //
+	objectCol.translation_ = { 0.0f, -10.0f, 0.0f };
+	objectCol.scale_ = { 10.0f, 0.1f, 10.0f };
+	objectCol.Initialize();
 
 	// --カメラの視点座標の設定-- //
 	viewProjection_.eye = { 20.0f, 10.0f, -20.0f };
@@ -122,7 +128,7 @@ void GameScene::Update()
 		len = vecBP.length();
 	}
 
-	bool col = len < 1.0f;
+	col = len < 1.0f;
 
 	// --Ray移動処理-- //
 	{
@@ -144,6 +150,8 @@ void GameScene::Update()
 	// --行列再計算-- //
 	ray_[0].UpdateMatrix();
 	ray_[1].UpdateMatrix();
+
+	objectCol.UpdateMatrix();
 
 	// --行列の再計算-- //
 	viewProjection_.UpdateMatrix();
@@ -200,6 +208,8 @@ void GameScene::Draw()
 	model_->Draw(enemy_, viewProjection_, textureHandle_);
 	//model_->Draw(ray_[0], viewProjection_);
 	model_->Draw(ray_[1], viewProjection_);
+
+	if (col) model_->Draw(objectCol, viewProjection_, textureHandle_);
 
 	// --デバックカメラ
 	//model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);
