@@ -106,26 +106,26 @@ void GameScene::Update()
 	Vector3 ray = { 0.0f, 0.0f, 30.0f };
 
 	// --Rayの始点から敵(円)の中心点までのベクトル
-	Vector3 vecAP = enemy_.translation_ - ray_[0].translation_;
+	Vector3 vecSE = enemy_.translation_ - ray_[0].translation_;
 
 	// --Rayの終点から敵(円)の中心点までのベクトル
-	Vector3 vecBP = enemy_.translation_ - (ray_[0].translation_ + ray);
+	Vector3 vecEE = enemy_.translation_ - (ray_[0].translation_ + ray);
 
 	// --敵(円)の中心から線分への最短距離PX
-	Vector3 crossPX = ray.cross(vecAP) / ray.length();
+	Vector3 crossPX = ray.cross(vecSE) / ray.length();
 
 	// --Rayの始点から最短距離PXの長さ
-	float dotAX = ray.dot(vecAP) / ray.length();
+	float dotAX = ray.dot(vecSE) / ray.length();
 
 	// --最短距離PXの長さ
 	float len = Abs(crossPX.length());
 
 	// --PXが最短ではなかった場合
 	if (dotAX < 0) {
-		len = vecAP.length();
+		len = vecSE.length();
 	}
 	else if (dotAX > ray.length()) {
-		len = vecBP.length();
+		len = vecEE.length();
 	}
 
 	col = len < 1.0f;
