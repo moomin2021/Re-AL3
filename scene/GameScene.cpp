@@ -5,6 +5,19 @@
 #include "PrimitiveDrawer.h"
 #include <random>
 
+float Abs(float value) {
+	if (value < 0) return value *= -1;
+	return value;
+}
+
+bool RayCirCollision(Vector3 ray, Vector3 cir) {
+	Vector3 cross = ray.normalize().cross(cir);
+	float len = ray.length();
+	float dot = ray.normalize().dot(cir);
+	if (0 <= dot && dot <= len) return true;
+	return 0;
+}
+
 GameScene::GameScene() {}
 
 GameScene::~GameScene()
@@ -12,7 +25,6 @@ GameScene::~GameScene()
 	delete sprite_;
 	delete model_;
 	delete debugCamera_;
-	delete player_;
 }
 
 void GameScene::Initialize()
@@ -55,8 +67,20 @@ void GameScene::Initialize()
 	// ライン描画が参照するビュープロジェクションを指定する（アドレス無し）
 	PrimitiveDrawer::GetInstance()->SetViewProjection(&viewProjection_);
 
+	// --敵-- //
+	enemy_.translation_ = { 0.0f, 0.0f, 10.0f };
+	enemy_.Initialize();
+
+	ray_[0].translation_ = { 0.0f, 0.0f, -20.0f };
+	ray_[0].Initialize();
+
+	ray_[1].parent_ = &ray_[0];
+	ray_[1].translation_ = { 0.0f, 0.0f, 15.0f };
+	ray_[1].scale_ = { 0.1f, 0.1f, 15.0f };
+	ray_[1].Initialize();
+
 	// --カメラの視点座標の設定-- //
-	viewProjection_.eye = { 0.0f, 0.0f, -50.0f };
+	viewProjection_.eye = { 20.0f, 10.0f, -20.0f };
 
 	// --カメラの注視点を設定-- //
 	viewProjection_.target = { 0.0f, 0.0f, 0.0f };
@@ -66,55 +90,82 @@ void GameScene::Initialize()
 
 	// --ビュープロジェクションの初期化-- //
 	viewProjection_.Initialize();
-
-	// --プレイヤーの生成-- //
-	player_ = new Player();
-
-	// --プレイヤーの初期化-- //
-	player_->Initialize(model_, textureHandle_);
 }
 
 void GameScene::Update()
 {
+	// --敵の更新処理-- //
+	enemy_.UpdateMatrix();
 
-	// --デバックカメラ有効化-- //
-#ifdef _DEBUG
-	if (input_->TriggerKey(DIK_B)) {
-		isDebugCameraActive_ = true;
+	Vector3 ray = { 0.0f, 0.0f, 30.0f };
+
+	// --Rayの始点から敵(円)の中心点までのベクトル
+	Vector3 vecAP = enemy_.translation_ - ray_[0].translation_;
+
+	// --Rayの終点から敵(円)の中心点までのベクトル
+	Vector3 vecBP = enemy_.translation_ - (ray_[0].translation_ + ray);
+
+	// --敵(円)の中心から線分への最短距離PX
+	Vector3 crossPX = ray.cross(vecAP) / ray.length();
+
+	// --Rayの始点から最短距離PXの長さ
+	float dotAX = ray.dot(vecAP) / ray.length();
+
+	// --最短距離PXの長さ
+	float len = Abs(crossPX.length());
+
+	// --PXが最短ではなかった場合
+	if (dotAX < 0) {
+		len = vecAP.length();
 	}
-#endif
-
-	// --プレイヤーの更新処理-- //
-	player_->Update();
-
-	// --カメラ処理-- //
-	if (isDebugCameraActive_) {
-		
-		// --デバックカメラの更新
-		debugCamera_->Update();
-
-		// --デバックカメラビュー行列
-		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
-
-		// --デバックカメラプロジェクション行列
-		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
-
-		// --ビュープロジェクション行列の再計算と転送
-		viewProjection_.UpdateMatrix();
-		viewProjection_.TransferMatrix();
-	}
-	else {
-		// --行列の再計算-- //
-		viewProjection_.UpdateMatrix();
+	else if (dotAX > ray.length()) {
+		len = vecBP.length();
 	}
 
+	bool col = len < 1.0f;
+
+	// --Ray移動処理-- //
+	{
+		// --Rayの移動量
+		Vector3 move{};
+
+		// --Rayの移動速度
+		float speed = 0.2f;
+
+		if (input_->PushKey(DIK_LSHIFT)) speed = 0.1f;
+
+		move.x += (input_->PushKey(DIK_D) - input_->PushKey(DIK_A)) * speed;
+		move.y += (input_->PushKey(DIK_W) - input_->PushKey(DIK_S)) * speed;
+		move.z += (input_->PushKey(DIK_UP) - input_->PushKey(DIK_DOWN)) * speed;
+
+		ray_[0].translation_+= move;
+	}
+
+	// --行列再計算-- //
+	ray_[0].UpdateMatrix();
+	ray_[1].UpdateMatrix();
+
+	// --行列の再計算-- //
+	viewProjection_.UpdateMatrix();
 
 	// --デバッグ用表示-- //
-	debugText_->SetPos(50, 50);
-	debugText_->Printf("eye:(%f, %f, %f)", viewProjection_.eye.x, viewProjection_.eye.y, viewProjection_.eye.z);
+	//debugText_->SetPos(50, 50);
+	//debugText_->Printf("vecAP:(%f, %f, %f)", vecAP.x, vecAP.y, vecAP.z);
 
-	debugText_->SetPos(50, 50);
-	debugText_->Printf("DebugCameraActive:%d", isDebugCameraActive_);
+	//debugText_->SetPos(50, 70);
+	//debugText_->Printf("vecBP:(%f, %f, %f)", vecBP.x, vecBP.y, vecBP.z);
+
+	//debugText_->SetPos(50, 90);
+	//debugText_->Printf("dotAX:%f", dotAX);
+
+	//debugText_->SetPos(50, 110);
+	//debugText_->Printf("crossPX:(%f, %f, %f)", crossPX.x, crossPX.y, crossPX.z);
+
+	//debugText_->SetPos(50, 130);
+	//debugText_->Printf("len:%f", len);
+
+	debugText_->SetPos(780, 250);
+	debugText_->Printf("Hit:%d", col);
 }
 
 void GameScene::Draw()
@@ -146,9 +197,9 @@ void GameScene::Draw()
 	/// </summary>
 
 	// --3Dモデル追加-- //
-
-	// --プレイヤーの描画処理-- //
-	player_->Draw(viewProjection_);
+	model_->Draw(enemy_, viewProjection_, textureHandle_);
+	//model_->Draw(ray_[0], viewProjection_);
+	model_->Draw(ray_[1], viewProjection_);
 
 	// --デバックカメラ
 	//model_->Draw(worldTransform_, debugCamera_->GetViewProjection(), textureHandle_);

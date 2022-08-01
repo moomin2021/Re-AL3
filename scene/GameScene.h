@@ -79,8 +79,11 @@ public:
 	// 3Dモデル
 	Model * model_ = nullptr;
 
-	// --プレイヤー-- //
-	Player* player_ = nullptr;
+	// --敵-- //
+	WorldTransform enemy_;
+
+	// --Ray-- //
+	WorldTransform ray_[2];
 
 	// ビュープロジェクション
 	ViewProjection viewProjection_;
