@@ -1,6 +1,31 @@
 #include "Player.h"
 #include <cassert>
 
+// --キャラクターの旋回処理-- //
+void Player::Rotate() {
+	// --旋回速度-- //
+	float speed = 0.1f;
+
+	// --押した方向で回転させる-- //
+	worldTransform_.rotation_.y += (input_->PushKey(DIK_U) - input_->PushKey(DIK_I)) * speed;
+
+	// --行列更新
+	worldTransform_.UpdateMatrix();
+}
+
+// --攻撃-- //
+void Player::Attack() {
+	// --スペースキーを押したら-- //
+	if (input_->TriggerKey(DIK_SPACE)) {
+		// --弾を生成し、初期化
+		PlayerBullet* newBullet = new PlayerBullet();
+		newBullet->Initialize(model_, worldTransform_.translation_);
+
+		// --弾を登録する
+		bullet_ = newBullet;
+	}
+}
+
 /// --初期化処理-- ///
 #pragma region
 
@@ -34,9 +59,12 @@ void Player::Update() {
 		// --キャラクター移動ベクトル
 		Vector3 move = { 0, 0, 0 };
 
+		// --キャラクターの移動速度-- //
+		float speed = 0.1f;
+
 		// --移動ベクトルを変更する処理
-		move.x = input_->PushKey(DIK_D) - input_->PushKey(DIK_A);
-		move.y = input_->PushKey(DIK_W) - input_->PushKey(DIK_S);
+		move.x = (input_->PushKey(DIK_D) - input_->PushKey(DIK_A)) * speed;
+		move.y = (input_->PushKey(DIK_W) - input_->PushKey(DIK_S)) * speed;
 
 		// --座標移動（ベクトルの加算）
 		worldTransform_.translation_ += move;
@@ -53,6 +81,15 @@ void Player::Update() {
 		// --行列更新
 		worldTransform_.UpdateMatrix();
 	}
+
+	// --旋回処理-- //
+	Rotate();
+
+	// --キャラクター攻撃処理-- //
+	Attack();
+
+	// --弾更新-- //
+	if (bullet_) bullet_->Update();
 
 	// --デバックテキスト-- //
 	{
@@ -73,6 +110,9 @@ void Player::Update() {
 void Player::Draw(ViewProjection viewProjection) {
 	// --3Dモデルを描画-- //
 	model_->Draw(worldTransform_, viewProjection, textureHandle_);
+
+	// --弾の描画-- //
+	if (bullet_) bullet_->Draw(viewProjection);
 }
 
 /// --END-- ///

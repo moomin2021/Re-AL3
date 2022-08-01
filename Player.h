@@ -4,6 +4,7 @@
 #include "Input.h"
 #include "DebugText.h"
 #include "ViewProjection.h"
+#include "PlayerBullet.h"
 
 class Player {
 private:
@@ -21,6 +22,16 @@ private:
 
 	// --デバックテキスト-- //
 	DebugText* debugText_ = nullptr;
+	
+	// --弾-- //
+	PlayerBullet* bullet_ = nullptr;
+
+private:
+	// --キャラクターの旋回処理-- //
+	void Rotate();
+
+	// --攻撃-- //
+	void Attack();
 
 public:
 	// --初期化処理-- //
